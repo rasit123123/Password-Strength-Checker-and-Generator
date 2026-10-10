@@ -1,0 +1,99 @@
+import os
+import secrets
+import string
+
+# Renk kodları
+YESIL = "\033[92m"
+KIRMIZI = "\033[91m"
+SARI = "\033[93m"
+MAVI = "\033[94m"
+SIFIRLA = "\033[0m"
+
+
+COMMON_PASSWORDS = "100k-most-used-passwords-NCSC.txt"
+
+
+def load_most_common_passwords(path):
+    passwords = set()
+    if not os.path.exists(path):
+        print("yukleme yapilamadi")
+        return passwords
+
+    with open(path, "r", encoding="utf-8", errors="ignore") as f:
+        for line in f:
+            password = line.strip().lower()
+            if password:
+                passwords.add(password)
+    return passwords
+
+
+most_common_passwords = load_most_common_passwords(COMMON_PASSWORDS)
+
+
+def generate_password(length=12):
+    pool = string.ascii_letters + string.digits + string.punctuation
+    return "".join(secrets.choice(pool) for _ in range(length))
+
+
+def check_strength(user_password):
+    if user_password.lower() in most_common_passwords:
+        return 'common_password'
+
+    if len(user_password) >= 12:
+        long_enough = True
+    else:
+        long_enough = False
+
+    has_lowercase_letters = has_uppercase_letters = has_digits = has_special_characters = False
+    for i in user_password:
+        if i.islower():
+            has_lowercase_letters = True
+        elif i.isupper():
+            has_uppercase_letters = True
+        elif i.isdigit():
+            has_digits = True
+        elif i in string.punctuation:
+            has_special_characters = True
+
+    return [has_lowercase_letters, has_uppercase_letters, has_digits, has_special_characters, long_enough]
+
+
+def main():
+    while 1:
+        print(f'{KIRMIZI}Menuye Hosgeldiniz! Lutfen Isleminizi Seciniz:{SIFIRLA} \n 1-Sifre Kontrolu \n 2-Rasgele Sifre Uret \n 3-Cikis')
+        Islem = input()
+        if Islem == '1':
+            print(f'{KIRMIZI}Sifre Kontrolu Secildi Lutfen Sifreyi Giriniz{SIFIRLA}: ')
+            user_password = input()
+            checked_strength = check_strength(user_password)
+            if checked_strength == 'common_password':
+                print(f'{SARI}Bu sifre en cok kullanilanlar listesinde.{SIFIRLA}')
+                continue
+
+            has_lowercase_letters, has_uppercase_letters, has_digits, has_special_characters, long_enough = checked_strength
+
+            print(f"\nKüçük Harf:        {'✅' if has_lowercase_letters else '❌'}")
+            print(f"Büyük Harf:        {'✅' if has_uppercase_letters else '❌'}")
+            print(f"Rakam:             {'✅' if has_digits else '❌'}")
+            print(f"Özel Karakter:     {'✅' if has_special_characters else '❌'}")
+            print(f"Yeterince uzun mu?:{'✅' if long_enough else '❌'}\n")
+
+        elif Islem == '2':
+            password_length = input('Sifrenin Uzunlugu Kac Olsun?: ')
+            if not password_length.isdigit() or int(password_length) <= 0:
+                print(f'{SARI}Lutfen gecerli pozitif bir sayi giriniz!{SIFIRLA}\n')
+                continue
+            password_length = int(password_length)
+            generated_password = generate_password(password_length)
+            print(f'Rasgele Sifreniz:  {MAVI}{generated_password}{SIFIRLA}')
+
+        elif Islem == '3':
+            print('Cikis Yapiliyor...')
+            break
+
+        else:
+            print("Gecersiz secim!")
+
+
+if __name__ == "__main__":
+    main()
